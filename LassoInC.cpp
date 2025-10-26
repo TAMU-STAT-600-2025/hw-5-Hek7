@@ -29,7 +29,52 @@ double lasso_c(const arma::mat& Xtilde, const arma::colvec& Ytilde, const arma::
 // [[Rcpp::export]]
 arma::colvec fitLASSOstandardized_c(const arma::mat& Xtilde, const arma::colvec& Ytilde, double lambda, const arma::colvec& beta_start, double eps = 0.001){
   // Your function code goes here
-}  
+  int n = Xtilde.n_rows;
+  int p = Xtilde.n_cols;
+  
+  if (n != Ytilde.n_rows){
+    stop("rows in ytilde and xtilde not equal");
+  }
+
+  
+  if(lambda < 0){
+    stop("lambda must be non-negative");
+  }
+  
+  if (beta_start.n_elem != (unsigned)p) {
+    stop("length of beta_start does not match num cols in xtilde");
+  }
+  
+  arma::colvec beta = beta_start;
+  arma::colvec resid = Ytilde - Xtilde * beta;
+  double f_old = lasso_c(Xtilde, Ytilde, beta, lambda);
+  
+  bool converged = false;
+  
+  while(!converged){
+    // follow same format as the previous Lasso Function
+    for (int j = 0; j < p; ++j){
+      resid += Xtilde.col(j) * beta[j];
+      
+      double r_j = dot(Xtilde.col(j), resid) / n;
+      
+      double new_beta_j = soft_c(r_j, lambda);
+      beta[j] = new_beta_j;
+      
+      resid -= Xtilde.col(j) * new_beta_j;
+    }
+    double f_new = lasso_c(Xtilde, Ytilde, beta, lambda);
+    
+    if (std::abs(f_old - f_new) < eps) {
+      converged = true;
+    }
+    
+    f_old = f_new;
+  }
+  
+  return beta;
+}
+  
 
 // Lasso coordinate-descent on standardized data with supplied lambda_seq. 
 // You can assume that the supplied lambda_seq is already sorted from largest to smallest, and has no negative values.

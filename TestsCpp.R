@@ -43,6 +43,37 @@ test_that("lasso_c works", {
 
 # Do at least 2 tests for fitLASSOstandardized function below. You are checking output agreements on at least 2 separate inputs
 #################################################
+test_that("lassostandardized_c works", {
+  set.seed(43)
+  
+  n <- 100
+  p <- 5
+  X1 <- scale(matrix(rnorm(n * p), n, p))
+  beta_true1 <- c(2, -1, 0, 0, 0)
+  Y1 <- X1 %*% beta_true1 + rnorm(n)
+  Y1 <- scale(Y1, scale = FALSE)
+  
+  lambda1 <- 0.1
+  beta_start1 <- rep(0, p)
+  
+  fit_1 <- fitLASSOstandardized(X1, Y1, lambda1, beta_start1)
+  fit_c1 <- fitLASSOstandardized_c(X1, Y1, lambda1, beta_start1)
+  
+  X2 <- scale(matrix(rnorm(n * p), n, p))
+  beta_true2 <- c(1, -2, 1, 0, 0)
+  Y2 <- X2 %*% beta_true2 + rnorm(n)
+  Y2 <- scale(Y2, scale = FALSE)
+  
+  lambda2 <- 0.5
+  beta_start2 <- rep(0, p)
+  
+  fit_2 <- fitLASSOstandardized(X2, Y2, lambda2, beta_start2)
+  fit_c2 <- fitLASSOstandardized_c(X2, Y2, lambda2, beta_start2)
+  
+  expect_equal(as.numeric(fit_c1), as.numeric(fit_1$beta), tolerance = 1e-3)
+  expect_equal(as.numeric(fit_c2), as.numeric(fit_2$beta), tolerance = 1e-3)
+})
+
 
 # Do microbenchmark on fitLASSOstandardized vs fitLASSOstandardized_c
 ######################################################################
