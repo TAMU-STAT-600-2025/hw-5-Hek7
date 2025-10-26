@@ -15,7 +15,7 @@ source("LassoFunctions.R")
 a1 <- 10
 lambda1 <- 2
 
-a2 <- -3
+a2 <- -10
 lambda2 <- 1
 
 test_that("soft_c works", {
@@ -26,7 +26,20 @@ test_that("soft_c works", {
 
 # Do at least 2 tests for lasso objective function below. You are checking output agreements on at least 2 separate inputs
 #################################################
-
+test_that("lasso_c works", {
+  X1 <- matrix(c(1, 2, 3, 4, 5, 6), ncol = 2)
+  Y1 <- c(1, 2, 3)
+  beta1 <- c(0.5, 0.25)
+  lambda1 <- 0.1
+  
+  X2 <- matrix(c(4, 2, 6, 9, 15, 6), ncol = 2)
+  Y2 <- c(4, 5, 1)
+  beta2 <- c(0.75, 0.25)
+  lambda2 <- 0.2
+  
+  expect_equal(lasso(X1, Y1, beta1, lambda1), lasso_c(X1, Y1, beta1, lambda1))
+  expect_equal(lasso(X2, Y2, beta2, lambda2), lasso_c(X2, Y2, beta2, lambda2))
+})
 
 # Do at least 2 tests for fitLASSOstandardized function below. You are checking output agreements on at least 2 separate inputs
 #################################################
