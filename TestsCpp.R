@@ -77,12 +77,97 @@ test_that("lassostandardized_c works", {
 
 # Do microbenchmark on fitLASSOstandardized vs fitLASSOstandardized_c
 ######################################################################
+library(bench)
+
+n <- 750
+p <- 25
+X <- scale(matrix(rnorm(n * p), n, p))
+beta_true <- c(2, -1, 2, rep(0, p - 3))
+Y <- X %*% beta_true + rnorm(n)
+Y <- scale(Y, scale = FALSE)
+
+lambda <- 0.1
+beta_start <- rep(0, p)
+
+# Run benchmark
+time <- bench::mark(
+  r = fitLASSOstandardized(X, Y, lambda, beta_start),
+  c = fitLASSOstandardized_c(X, Y, lambda, beta_start),
+  iterations = 100,
+  check = FALSE
+)
+
+# Print timing in seconds
+print(time[, c("expression", "median")])
+
+# Optionally convert median times to numeric seconds
+median_times_sec <- as.numeric(time$median)
+names(median_times_sec) <- time$expression
+print(median_times_sec)
+
 
 # Do at least 2 tests for fitLASSOstandardized_seq function below. You are checking output agreements on at least 2 separate inputs
 #################################################
+test_that("fitLASSOstandardized_seq_c works", {
+  set.seed(43)
+  
+  n = 100 
+  p = 5
+  X1 = scale(matrix(rnorm(n*p), n, p))
+  beta_true1 = c(1.5, -1, 0, 0, 0.5) 
+  Y1 = X1 %*% beta_true1 + rnorm(n)
+  Y1 = scale(Y1, scale = FALSE)
+  
+  lambda_seq1 = seq(.5, .05, length.out = 5)
+  
+  fit_seq <- fitLASSOstandardized_seq(X1, Y1, lambda_seq1)
+  fit_seq_c <- fitLASSOstandardized_seq_c(X1, Y1, lambda_seq1)
+  
+  expect_equal(dim(fit_seq_c), dim(fit_seq$beta_mat))
+  expect_equal(as.numeric(fit_seq_c), as.numeric(fit_seq$beta_mat), tolerance = 1e-3)
+  
+  # repeat
+  
+  n2 <- 200
+  p2 <- 10
+  X2 <- scale(matrix(rnorm(n2 * p2), n2, p2))
+  beta_true2 <- c(2, -0.5, 1, 0, 0, 0, 0, 0, .2, .1)
+  Y2 <- X2 %*% beta_true2 + rnorm(n2)
+  Y2 <- scale(Y2, scale = FALSE)
+  
+  lambda_seq2 = seq(.5, .05, length.out = 5)
+  
+  fit_seq_2 <- fitLASSOstandardized_seq(X2, Y2, lambda_seq2)
+  fit_seq_c2 <- fitLASSOstandardized_seq_c(X2, Y2, lambda_seq2)
+  
+  expect_equal(dim(fit_seq_c2), dim(fit_seq_2$beta_mat))
+  expect_equal(as.numeric(fit_seq_c2), as.numeric(fit_seq_2$beta_mat), tolerance = 1e-3)
+})
 
 # Do microbenchmark on fitLASSOstandardized_seq vs fitLASSOstandardized_seq_c
 ######################################################################
+set.seed(43)
+n <- 500
+p <- 20
+X <- scale(matrix(rnorm(n * p), n, p))
+beta_true <- c(2, -1, 1, rep(0, p - 3))
+Y <- X %*% beta_true + rnorm(n)
+Y <- scale(Y, scale = FALSE)
+
+lambda_seq <- seq(0.5, 0.05, length.out = 8)
+
+bench_seq <- bench::mark(
+  r = fitLASSOstandardized_seq(X, Y, lambda_seq),
+  c = fitLASSOstandardized_seq_c(X, Y, lambda_seq),
+  iterations = 100,
+  check = FALSE
+)
+
+print(bench_seq[, c("expression", "median")])
+
+median_times_sec_seq <- as.numeric(bench_seq$median)
+names(median_times_sec_seq) <- bench_seq$expression
+print(median_times_sec_seq)
 
 # Tests on riboflavin data
 ##########################

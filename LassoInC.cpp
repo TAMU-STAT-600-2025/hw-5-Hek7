@@ -82,4 +82,26 @@ arma::colvec fitLASSOstandardized_c(const arma::mat& Xtilde, const arma::colvec&
 // [[Rcpp::export]]
 arma::mat fitLASSOstandardized_seq_c(const arma::mat& Xtilde, const arma::colvec& Ytilde, const arma::colvec& lambda_seq, double eps = 0.001){
   // Your function code goes here
+  // just follow the code from lassofunctions.R but in C++
+  
+  int n = Xtilde.n_rows;
+  int p = Xtilde.n_cols;
+  int n_lambda = lambda_seq.n_elem;
+  
+  if (n != Ytilde.n_rows) {
+    stop("rows in ytilde and xtilde not equal");
+  }
+  
+  arma::mat beta_mat(p, n_lambda, arma::fill::zeros);
+  arma::colvec beta_start(p, arma::fill::zeros);
+  
+  for (int i = 0; i < n_lambda; i++){
+    double lambda = lambda_seq[i];
+    
+    arma::colvec beta_i = fitLASSOstandardized_c(Xtilde, Ytilde, lambda, beta_start, eps);
+    
+    beta_mat.col(i) = beta_i;
+  }
+  
+  return beta_mat;
 }
